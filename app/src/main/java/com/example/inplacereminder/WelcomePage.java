@@ -1,15 +1,20 @@
 package com.example.inplacereminder;
 
+import android.Manifest;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageButton;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class WelcomePage extends AppCompatActivity {
     DB_OpenHelper helper;
@@ -91,6 +96,13 @@ public class WelcomePage extends AppCompatActivity {
         btnMyPlaces.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, PlaceManager.class)));
         btnSettings.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, Settings.class)));
         btnAbout.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, About.class)));
+
+        // Request POST_NOTIFICATIONS permission if needed (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
+            }
+        }
     }
 
     // optional getter if other classes in this activity need the id
