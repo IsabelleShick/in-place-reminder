@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">In place reminder</string>
+    <string name="aboutText">Hi! My name is Isabelle,
+and I designed the app In Place Reminder.
+
+This app helps you create special reminders
+that are triggered by both time and location.
+
+I wanted to rethink how reminders work,
+by fully using the advantages of a mobile phone —
+making them smarter, more helpful,
+and more fun to use.
+
+Thank you for using
+In Place Reminder! 💙</string>
+</resources>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageButton
+        android:id="@+id/ib_back"
+        android:layout_width="63dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="8dp"
+        android:adjustViewBounds="true"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/back_icon"
+        tools:srcCompat="@drawable/back_icon" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="276dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="64dp"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
+        android:text="welcome "
+        android:textSize="30dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnNewReminders"
+        android:layout_width="229dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="88dp"
+        android:layout_marginTop="232dp"
+        android:text="new reminder"
+        android:textSize="20dp"
+        android:background="@drawable/custom_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnMyReminders"
+        android:layout_width="226dp"
+        android:layout_height="49dp"
+        android:layout_marginStart="96dp"
+        android:layout_marginTop="372dp"
+        android:text="my reminders"
+        android:textSize="20dp"
+        android:background="@drawable/custom_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnMyPlaces"
+        android:layout_width="224dp"
+        android:layout_height="51dp"
+        android:layout_marginStart="96dp"
+        android:layout_marginTop="504dp"
+        android:text="my places"
+        android:textSize="20dp"
+
+        android:background="@drawable/custom_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="52dp"
+        android:layout_marginBottom="48dp"
+        android:text="settinngs"
+        android:textSize="15dp"
+
+        android:background="@drawable/custom_button"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnAbout"
+        android:layout_width="107dp"
+        android:layout_height="49dp"
+        android:layout_marginEnd="52dp"
+        android:layout_marginBottom="48dp"
+        android:text="about"
+        android:textSize="15dp"
+
+        android:background="@drawable/custom_button"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+        android:id="@+id/ibProfile"
+        android:layout_width="101dp"
+        android:layout_height="96dp"
+        android:layout_marginTop="24dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/no_profile" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

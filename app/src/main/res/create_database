@@ -1,0 +1,30 @@
+ -- Users table
+ CREATE TABLE IF NOT EXISTS users (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     name TEXT NOT NULL UNIQUE,
+     password_hash TEXT NOT NULL
+ );
+
+ -- Places table
+ CREATE TABLE IF NOT EXISTS places (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     place_name TEXT NOT NULL,
+     lat REAL NOT NULL,
+     long REAL NOT NULL
+ );
+
+ -- Reminders table
+ CREATE TABLE IF NOT EXISTS reminders (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     place_id INTEGER NOT NULL,
+     year INTEGER,
+     month INTEGER,
+     date INTEGER,
+     time TEXT,
+     every_month BOOLEAN DEFAULT 0,
+     every_date BOOLEAN DEFAULT 0,
+     every_time BOOLEAN DEFAULT 0,
+     message TEXT,
+     alarm_sound TEXT,
+     FOREIGN KEY (place_id) REFERENCES places(id)
+ );

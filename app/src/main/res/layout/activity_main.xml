@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/btnAbout"
+        android:layout_width="177dp"
+        android:layout_height="39dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="200dp"
+        android:background="@drawable/custom_button"
+
+        android:text="about my app"
+        android:textSize="15dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:layout_width="395dp"
+        android:layout_height="45dp"
+        android:text="log in"
+        android:gravity="center"
+        android:textSize="30dp"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.025" />
+
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="360dp"
+        android:layout_height="66dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="124dp"
+        android:background="@drawable/custom_button"
+
+        android:text="log in"
+        android:textSize="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="208dp"
+        android:layout_height="237dp"
+        android:layout_marginStart="100dp"
+        android:layout_marginTop="72dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/app_icon" />
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="373dp"
+        android:layout_height="62dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="412dp"
+        android:ems="10"
+
+        android:hint="password"
+        android:inputType="textPassword"
+        android:textSize="30dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/etName"
+        android:layout_width="376dp"
+        android:layout_height="58dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="316dp"
+        android:ems="10"
+
+        android:hint="name"
+        android:inputType="text"
+        android:text=""
+        android:textSize="30dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnNewAccount"
+        android:layout_width="310dp"
+        android:layout_height="58dp"
+        android:layout_marginEnd="48dp"
+        android:layout_marginBottom="48dp"
+        android:background="#00FFFFFF"
+
+        android:text="don't have an account yet?"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

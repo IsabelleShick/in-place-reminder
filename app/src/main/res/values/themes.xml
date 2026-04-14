@@ -1,0 +1,22 @@
+<resources>
+
+    <style name="Base.Theme.InPlaceReminder" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Global font -->
+        <item name="android:fontFamily">@font/my_font_regular</item>
+        <item name="fontFamily">@font/my_font_regular</item>
+
+        <!-- App background -->
+        <item name="android:windowBackground">@color/brightBackgroundTheme</item>
+
+        <!-- Material surfaces (used by Material components) -->
+        <item name="colorSurface">@color/brightBackgroundTheme</item>
+
+        <!-- Accent / highlight -->
+        <item name="colorPrimary">@color/highlight</item>
+
+
+    </style>
+
+    <style name="Theme.InPlaceReminder" parent="Base.Theme.InPlaceReminder" />
+</resources>
