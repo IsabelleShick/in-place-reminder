@@ -13,7 +13,7 @@ import com.bumptech.glide.Glide;
 public class About extends AppCompatActivity {
 
     ImageButton ib_back;
-
+    Button btnEffect;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,7 +23,11 @@ public class About extends AppCompatActivity {
 
         ib_back.setOnClickListener(v -> finish());
 
-        ImageView iv_thanking_kitty = findViewById(R.id.iv_thanking_kitty);
+        ImageView iv_thanking_kitty = findViewById(R.id.ivThanking_kitty);
+        ImageView ivConfiti = findViewById(R.id.ivConfiti);
+        // make the confiti gif invisible
+        ivConfiti.setVisibility(View.INVISIBLE);
+
         Glide.with(this)
                 .asGif()
                 .load(R.drawable.thanking_kitty)
@@ -33,7 +37,24 @@ public class About extends AppCompatActivity {
         btnEffect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Code to show effect information
+                // make the confiti gif visible
+                ivConfiti.setVisibility(View.VISIBLE);
+
+                // Load and display the GIF using Glide
+                Glide.with(About.this)
+                        .asGif()
+                        .load(R.drawable.confiti)
+                        .dontTransform()
+                        .into(ivConfiti);
+
+                // make the ivConfiti invisible after 3 seconds(3000 milliseconds)
+                ivConfiti.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        ivConfiti.setVisibility(View.INVISIBLE);
+                    }
+                }, 3000);
+
             }
         });
     }
