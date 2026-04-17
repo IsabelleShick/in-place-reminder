@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class RemindersList extends AppCompatActivity {
+public class RemindersManager extends AppCompatActivity {
 
     private DB_OpenHelper dbHelper;
     private SQLiteDatabase db;
@@ -44,7 +44,7 @@ public class RemindersList extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.reminder_list);
+        setContentView(R.layout.reminder_manager);
 
         ib_back = findViewById(R.id.ib_back1);
         lvReminders = findViewById(R.id.lvReminders);
@@ -89,7 +89,7 @@ public class RemindersList extends AppCompatActivity {
 
         btnDelete.setOnClickListener(v -> {
             if (selectedReminderId != -1) {
-                AlarmScheduler.cancelReminder(RemindersList.this, selectedReminderId);
+                AlarmScheduler.cancelReminder(RemindersManager.this, selectedReminderId);
 
                 SQLiteDatabase writable = dbHelper.getWritableDatabase();
                 try {
@@ -125,7 +125,7 @@ public class RemindersList extends AppCompatActivity {
                 String desc = idxDesc != -1 ? c.getString(idxDesc) : "";
                 long time = idxTime != -1 ? c.getLong(idxTime) : 0L;
 
-                Intent intent = new Intent(RemindersList.this, ReminderEditor.class);
+                Intent intent = new Intent(RemindersManager.this, ReminderEditor.class);
                 intent.putExtra("id", id);
                 intent.putExtra("title", title);
                 intent.putExtra("desc", desc);

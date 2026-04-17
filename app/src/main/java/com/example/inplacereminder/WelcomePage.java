@@ -92,7 +92,7 @@ public class WelcomePage extends AppCompatActivity {
 
         ibProfile.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, Settings.class)));
 
-        btnMyReminders.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, RemindersList.class)));
+        btnMyReminders.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, RemindersManager.class)));
         btnMyPlaces.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, PlaceManager.class)));
         btnSettings.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, Settings.class)));
         btnAbout.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, About.class)));
