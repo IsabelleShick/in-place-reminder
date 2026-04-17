@@ -47,22 +47,24 @@
         android:paddingEnd="16dp" />
 
     <Button
-        android:id="@+id/btnAddPlace"
-        android:layout_width="93dp"
-        android:layout_height="52dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="52dp"
-        android:text="add"
+        android:id="@+id/btnDelete"
+        android:layout_width="124dp"
+        android:layout_height="58dp"
+        android:layout_marginStart="268dp"
+        android:layout_marginBottom="36dp"
         android:background="@drawable/custom_button"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+
+        android:text="delete"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/btnEditPlace"
         android:layout_width="116dp"
         android:layout_height="58dp"
-        android:layout_marginStart="132dp"
-        android:layout_marginBottom="52dp"
+        android:layout_marginStart="136dp"
+        android:layout_marginBottom="36dp"
         android:background="@drawable/custom_button"
 
         android:text="edit"
@@ -71,14 +73,13 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/btnDelete"
-        android:layout_width="124dp"
-        android:layout_height="58dp"
-        android:layout_marginStart="264dp"
-        android:layout_marginBottom="52dp"
+        android:id="@+id/btnAddPlace"
+        android:layout_width="98dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="40dp"
         android:background="@drawable/custom_button"
-
-        android:text="delete"
+        android:text="add"
         android:textSize="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

@@ -18,8 +18,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class ReminderEditor extends AppCompatActivity {
@@ -37,6 +39,8 @@ public class ReminderEditor extends AppCompatActivity {
     private ImageButton ib_back;
 
     private DB_OpenHelper dbHelper;
+    private List<String> placeNames;
+    private List<Long> placeIds;
 
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("d/M/yyyy", Locale.getDefault());
     private static final SimpleDateFormat TIME_FMT = new SimpleDateFormat("H:mm", Locale.getDefault());
@@ -57,7 +61,7 @@ public class ReminderEditor extends AppCompatActivity {
         etTitle = findViewById(R.id.etTitle);
         etDescription = findViewById(R.id.etDescription);
         ib_back = findViewById(R.id.ib_back);
-        spPlaces = findViewById(R.id.spinner); // existing spinner for places
+        spPlaces = findViewById(R.id.spPlaces); // existing spinner for places
         spRepeat = findViewById(R.id.spRepeat); // new spinner - ensure layout contains this id
 
         // Populate repeat spinner: None, Sunday..Saturday, Every day
@@ -75,6 +79,14 @@ public class ReminderEditor extends AppCompatActivity {
         ArrayAdapter<String> repeatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, repeatOptions);
         repeatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         if (spRepeat != null) spRepeat.setAdapter(repeatAdapter);
+
+        // Load and populate places spinner
+        placeNames = new ArrayList<>();
+        placeIds = new ArrayList<>();
+        loadPlaces();
+        ArrayAdapter<String> placesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, placeNames);
+        placesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        if (spPlaces != null) spPlaces.setAdapter(placesAdapter);
 
         ib_back.setOnClickListener(v -> finish());
 
@@ -111,6 +123,7 @@ public class ReminderEditor extends AppCompatActivity {
             String title = getIntent().getStringExtra("title");
             String desc = getIntent().getStringExtra("desc");
             long time = getIntent().getLongExtra("time", 0L);
+            long placeId = getIntent().getLongExtra("place_id", -1);
 
             if (title != null) etTitle.setText(title);
             if (desc != null) etDescription.setText(desc);
@@ -124,6 +137,16 @@ public class ReminderEditor extends AppCompatActivity {
                 etTime.setText(timeStr);
                 tvDateView.setText(dateStr);
                 tvTimeView.setText(timeStr);
+            }
+
+            // Set the correct place in spinner if placeId is provided
+            if (placeId > 0) {
+                for (int i = 0; i < placeIds.size(); i++) {
+                    if (placeIds.get(i) == placeId) {
+                        spPlaces.setSelection(i);
+                        break;
+                    }
+                }
             }
 
             // load repeat_weekday from DB if present
@@ -241,6 +264,34 @@ public class ReminderEditor extends AppCompatActivity {
         }
     }
 
+    private void loadPlaces() {
+        placeNames.clear();
+        placeIds.clear();
+
+        try (SQLiteDatabase db = dbHelper.getReadableDatabase();
+             Cursor cursor = db.query(
+                     "places",
+                     new String[]{"id", "place_name"},
+                     null,
+                     null,
+                     null,
+                     null,
+                     "place_name ASC"
+             )) {
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    long id = cursor.getLong(0);
+                    String name = cursor.getString(1);
+                    placeIds.add(id);
+                    placeNames.add(name);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error loading places", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void saveReminderToDatabase() {
         String title = etTitle.getText().toString().trim();
         String description = etDescription.getText().toString().trim();
@@ -268,20 +319,13 @@ public class ReminderEditor extends AppCompatActivity {
             }
         }
 
-        // determine place string and numeric place id for DB if possible
+        // determine place ID from spinner selection
+        long placeIdForDb = 1; // fallback default
         String placeStr = null;
-        int placeIdForDb = 1; // fallback existing behavior
-        Object sel = spPlaces != null ? spPlaces.getSelectedItem() : null;
-        if (sel != null) {
-            String s = sel.toString().trim();
-            if (!s.isEmpty()) {
-                placeStr = s;
-                try {
-                    placeIdForDb = Integer.parseInt(s);
-                } catch (NumberFormatException ignored) {
-                    // keep fallback
-                }
-            }
+        int selectedPlacePosition = spPlaces != null ? spPlaces.getSelectedItemPosition() : -1;
+        if (selectedPlacePosition >= 0 && selectedPlacePosition < placeIds.size()) {
+            placeIdForDb = placeIds.get(selectedPlacePosition);
+            placeStr = placeNames.get(selectedPlacePosition);
         }
 
         // determine repeat_weekday from spinner: -1 none, 0..6 Sun..Sat, 7 every day

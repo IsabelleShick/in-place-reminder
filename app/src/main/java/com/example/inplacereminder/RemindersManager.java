@@ -119,17 +119,20 @@ public class RemindersManager extends AppCompatActivity {
                 int idxTitle = c.getColumnIndex(DB_OpenHelper.REMINDER_TITLE);
                 int idxDesc = c.getColumnIndex(DB_OpenHelper.REMINDER_DESCRIPTION);
                 int idxTime = c.getColumnIndex("time");
+                int idxPlaceId = c.getColumnIndex(DB_OpenHelper.PLACE_ID);
 
                 long id = idxId != -1 ? c.getLong(idxId) : -1;
                 String title = idxTitle != -1 ? c.getString(idxTitle) : "";
                 String desc = idxDesc != -1 ? c.getString(idxDesc) : "";
                 long time = idxTime != -1 ? c.getLong(idxTime) : 0L;
+                long placeId = idxPlaceId != -1 ? c.getLong(idxPlaceId) : -1;
 
                 Intent intent = new Intent(RemindersManager.this, ReminderEditor.class);
                 intent.putExtra("id", id);
                 intent.putExtra("title", title);
                 intent.putExtra("desc", desc);
                 intent.putExtra("time", time);
+                intent.putExtra("place_id", placeId);
                 startActivity(intent);
             }
         });
@@ -150,7 +153,8 @@ public class RemindersManager extends AppCompatActivity {
                 DB_OpenHelper.REMINDER_TITLE,
                 DB_OpenHelper.REMINDER_DESCRIPTION,
                 "time",
-                "repeat_weekday" // include repeat_weekday so we can inspect it in the binder
+                "repeat_weekday", // include repeat_weekday so we can inspect it in the binder
+                DB_OpenHelper.PLACE_ID // include place_id to pass to editor
         };
 
         if (cursor != null && !cursor.isClosed()) {
