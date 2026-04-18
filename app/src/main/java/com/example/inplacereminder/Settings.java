@@ -1,6 +1,6 @@
 package com.example.inplacereminder;
 
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -14,6 +14,7 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -74,7 +75,7 @@ public class Settings extends AppCompatActivity {
             }
         }
 
-        // when profile image is clicked, show dialog to pick Gallery or Camera
+        // when profile image is clicked, show picture_dialog to pick Gallery or Camera
         ibProfile.setOnClickListener(v -> showImagePickerDialog());
 
         // Populate actions list
@@ -116,25 +117,31 @@ public class Settings extends AppCompatActivity {
     }
 
     private void showImagePickerDialog() {
-        String[] items = new String[]{"Gallery", "Camera"};
-        new AlertDialog.Builder(this)
-                .setTitle("Select image")
-                .setItems(items, (dialog, which) -> {
-                    if (which == 0) {
-                        Intent pick = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                        pick.setType("image/*");
-                        startActivityForResult(pick, REQ_GALLERY);
-                    } else {
-                        Intent cam = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                        try {
-                            startActivityForResult(cam, REQ_CAMERA);
-                        } catch (android.content.ActivityNotFoundException e) {
-                            Toast.makeText(this, "No camera app available", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                })
-                .setNegativeButton("Cancel", (d, w) -> d.dismiss())
-                .show();
+        Dialog dialog = new Dialog(Settings.this);
+        dialog.setContentView(R.layout.picture_dialog);
+
+        Button btnGallery = dialog.findViewById(R.id.btnGallery);
+        Button btnCamera = dialog.findViewById(R.id.btnCamera);
+
+        btnGallery.setOnClickListener(v -> {
+            Intent pick = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            pick.setType("image/*");
+            startActivityForResult(pick, REQ_GALLERY);
+            dialog.dismiss();
+        });
+
+        btnCamera.setOnClickListener(v -> {
+            Intent cam = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            try {
+                startActivityForResult(cam, REQ_CAMERA);
+            } catch (android.content.ActivityNotFoundException e) {
+                Toast.makeText(Settings.this, "No camera app available", Toast.LENGTH_SHORT).show();
+            }
+            dialog.dismiss();
+        });
+
+        dialog.setCancelable(true);
+        dialog.show();
     }
 
     // existing onActivityResult and getCircularBitmap remain the same...

@@ -37,7 +37,6 @@ public class ReminderEditor extends AppCompatActivity {
     private EditText etTitle;
     private EditText etDescription;
     private ImageButton ib_back;
-
     private DB_OpenHelper dbHelper;
     private List<String> placeNames;
     private List<Long> placeIds;
