@@ -25,7 +25,7 @@ public class RemindersManager extends AppCompatActivity {
     private SimpleCursorAdapter adapter;
     private ListView lvReminders;
     private ImageButton ib_back;
-    private Button btnDelete, btnEdit;
+    private Button btnDelete, btnEdit, btnAddReminder;
     private long selectedReminderId = -1;
     private int selectedPosition = AdapterView.INVALID_POSITION;
 
@@ -50,6 +50,7 @@ public class RemindersManager extends AppCompatActivity {
         lvReminders = findViewById(R.id.lvReminders);
         btnDelete = findViewById(R.id.btnDelete);
         btnEdit = findViewById(R.id.btnEdit);
+        btnAddReminder = findViewById(R.id.btnAddReminder);
 
         dbHelper = new DB_OpenHelper(this);
         db = dbHelper.getReadableDatabase();
@@ -135,6 +136,12 @@ public class RemindersManager extends AppCompatActivity {
                 intent.putExtra("place_id", placeId);
                 startActivity(intent);
             }
+        });
+
+        btnAddReminder.setOnClickListener(v -> {
+            Intent intent = new Intent(RemindersManager.this, ReminderEditor.class);
+            intent.putExtra("id", -1); // Indicate new reminder
+            startActivity(intent);
         });
     }
 

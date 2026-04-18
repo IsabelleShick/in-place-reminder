@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat;
 
 public class WelcomePage extends AppCompatActivity {
     DB_OpenHelper helper;
-    Button btnNewReminder, btnMyReminders, btnMyPlaces, btnSettings, btnAbout;
+    Button btnMyReminders, btnMyPlaces, btnSettings, btnAbout;
     ImageButton ibProfile;
     ImageButton ib_back;
     private static final String PREFS_NAME = "user_prefs";
@@ -32,7 +32,6 @@ public class WelcomePage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.welcome_page);
 
-        btnNewReminder = findViewById(R.id.btnNewReminders);
         btnMyReminders = findViewById(R.id.btnMyReminders);
         btnMyPlaces = findViewById(R.id.btnMyPlaces);
         btnSettings = findViewById(R.id.btnSettings);
@@ -85,10 +84,6 @@ public class WelcomePage extends AppCompatActivity {
         }
 
         ib_back.setOnClickListener(v -> finish());
-
-        btnNewReminder.setOnClickListener(v -> {
-            startActivity(new android.content.Intent(WelcomePage.this, ReminderEditor.class));
-        });
 
         ibProfile.setOnClickListener(v -> startActivity(new android.content.Intent(WelcomePage.this, Settings.class)));
 

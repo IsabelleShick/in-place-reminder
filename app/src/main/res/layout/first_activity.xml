@@ -7,14 +7,14 @@
 
     <TextView
         android:id="@+id/textView4"
-        android:layout_width="289dp"
-        android:layout_height="125dp"
-        android:layout_marginStart="60dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
-
         android:gravity="center"
-        android:text="just a second..."
-        android:textSize="30dp"
+        android:text="Just a second..."
+        android:textSize="30sp"
+        android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
