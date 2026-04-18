@@ -8,6 +8,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -35,8 +39,17 @@ public class AlarmReceiver extends BroadcastReceiver {
         String desc = intent != null ? intent.getStringExtra("desc") : null;
         long time = intent != null ? intent.getLongExtra("time", 0L) : 0L;
         String place = intent != null ? intent.getStringExtra("place") : null; // optional
+        long placeId = intent != null ? intent.getLongExtra("place_id", -1L) : -1L; // NEW
 
-        // Build intent to open reminder details (reuse ReminderEditor which accepts extras)
+        // NEW: If placeId is not -1, check if current location is within 300 meters of the place
+        if (placeId > 0) {
+            if (!isUserNearPlace(context, placeId)) {
+                Log.d(TAG, "User is not near the selected place. Skipping notification.");
+                return;
+            }
+        }
+
+        // ... existing notification code ...
         Intent activityIntent = new Intent(context, ReminderEditor.class);
         activityIntent.putExtra("id", reminderId);
         if (title != null) activityIntent.putExtra("title", title);
@@ -126,5 +139,90 @@ public class AlarmReceiver extends BroadcastReceiver {
                 nm.createNotificationChannel(channel);
             }
         }
+    }
+
+    // NEW: Check if user is within 300 meters of the selected place
+    private boolean isUserNearPlace(Context context, long placeId) {
+        // Get place coordinates from database
+        DB_OpenHelper dbHelper = new DB_OpenHelper(context);
+        double[] placeCoords = getPlaceCoordinates(dbHelper, placeId);
+
+        if (placeCoords == null) {
+            Log.d(TAG, "Place not found in database");
+            return false;
+        }
+
+        double placeLat = placeCoords[0];
+        double placeLon = placeCoords[1];
+
+        // Get current location
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager == null) {
+            Log.d(TAG, "LocationManager not available");
+            return false;
+        }
+
+        // Check permission and get last known location
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Location permission not granted");
+            return false;
+        }
+
+        Location currentLocation = null;
+
+        // Try GPS first
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        }
+
+        // If no GPS, try Network provider
+        if (currentLocation == null && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
+
+        // If still no location, try Passive provider
+        if (currentLocation == null) {
+            currentLocation = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+        }
+
+        if (currentLocation == null) {
+            Log.d(TAG, "Current location not available");
+            return false;
+        }
+
+        // Calculate distance between current location and place
+        float[] results = new float[1];
+        Location.distanceBetween(currentLocation.getLatitude(), currentLocation.getLongitude(),
+                placeLat, placeLon, results);
+
+        float distanceInMeters = results[0];
+        Log.d(TAG, "Distance to place: " + distanceInMeters + " meters");
+
+        // Check if within 300 meters
+        return distanceInMeters <= 300;
+    }
+
+    // NEW: Get place coordinates from database
+    private double[] getPlaceCoordinates(DB_OpenHelper dbHelper, long placeId) {
+        try (SQLiteDatabase db = dbHelper.getReadableDatabase();
+             Cursor cursor = db.query(
+                     "places",
+                     new String[]{"lat", "lon"},
+                     "id = ?",
+                     new String[]{String.valueOf(placeId)},
+                     null,
+                     null,
+                     null
+             )) {
+            if (cursor != null && cursor.moveToFirst()) {
+                double lat = cursor.getDouble(0);
+                double lon = cursor.getDouble(1);
+                return new double[]{lat, lon};
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching place coordinates", e);
+        }
+        return null;
     }
 }

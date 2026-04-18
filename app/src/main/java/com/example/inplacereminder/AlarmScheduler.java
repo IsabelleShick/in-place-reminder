@@ -21,6 +21,14 @@ public class AlarmScheduler {
      * bumped to a short time in the future so AlarmManager will still fire immediately.
      */
     public static void scheduleReminder(Context context, long reminderId, long timeMs, String title, String desc, String place) {
+        scheduleReminder(context, reminderId, timeMs, title, desc, place, -1L);
+    }
+
+    /**
+     * Schedule a single reminder alarm with placeId. If the time is in the past or equal to now it is
+     * bumped to a short time in the future so AlarmManager will still fire immediately.
+     */
+    public static void scheduleReminder(Context context, long reminderId, long timeMs, String title, String desc, String place, long placeId) {
         long now = System.currentTimeMillis();
         // If requested time is in the past or exactly now, bump to now + 1s so AM will fire immediately
         if (timeMs <= now) {
@@ -50,6 +58,7 @@ public class AlarmScheduler {
         if (desc != null) intent.putExtra("description", desc);
         intent.putExtra("time", timeMs);
         if (place != null) intent.putExtra("place", place);
+        intent.putExtra("place_id", placeId); // NEW
 
         int requestCode = (int) reminderId;
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;

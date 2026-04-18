@@ -139,13 +139,17 @@ public class ReminderEditor extends AppCompatActivity {
             }
 
             // Set the correct place in spinner if placeId is provided
-            if (placeId > 0) {
+            if (placeId >= 0) {
+                // Find and select the matching place
                 for (int i = 0; i < placeIds.size(); i++) {
                     if (placeIds.get(i) == placeId) {
                         spPlaces.setSelection(i);
                         break;
                     }
                 }
+            } else if (placeId == -1) {
+                // Select "Any Location" (first option)
+                spPlaces.setSelection(0);
             }
 
             // load repeat_weekday from DB if present
@@ -267,6 +271,10 @@ public class ReminderEditor extends AppCompatActivity {
         placeNames.clear();
         placeIds.clear();
 
+        // Add "Any Location" as first option with id -1
+        placeNames.add("Any Location");
+        placeIds.add(-1L);
+
         try (SQLiteDatabase db = dbHelper.getReadableDatabase();
              Cursor cursor = db.query(
                      "places",
@@ -349,7 +357,7 @@ public class ReminderEditor extends AppCompatActivity {
                     long newRowId = db.insertOrThrow(DB_OpenHelper.TABLE_REMINDERS, null, values);
                     if (newRowId != -1) {
                         if (timeMs > System.currentTimeMillis()) {
-                            AlarmScheduler.scheduleReminder(this, newRowId, timeMs, title, description, placeStr);
+                            AlarmScheduler.scheduleReminder(this, newRowId, timeMs, title, description, placeStr, placeIdForDb);
                         }
                         Toast.makeText(this, "Reminder saved successfully!", Toast.LENGTH_SHORT).show();
                         finish();
@@ -371,7 +379,7 @@ public class ReminderEditor extends AppCompatActivity {
                     );
                     if (rows > 0) {
                         if (timeMs > System.currentTimeMillis()) {
-                            AlarmScheduler.scheduleReminder(this, reminderId, timeMs, title, description, placeStr);
+                            AlarmScheduler.scheduleReminder(this, reminderId, timeMs, title, description, placeStr, placeIdForDb);
                         }
                         Toast.makeText(this, "Reminder updated successfully!", Toast.LENGTH_SHORT).show();
                         finish();
