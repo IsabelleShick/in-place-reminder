@@ -30,7 +30,7 @@ public class ReminderEditor extends AppCompatActivity {
     private Button btnSave;
     private Button btnDelete;
     private Spinner spPlaces;
-    private Spinner spRepeat;
+    private MultiSelectSpinner spRepeat;
     private TextView tvTimeView;
     private TextView tvDateView;
     private EditText etDate, etTime;
@@ -63,21 +63,19 @@ public class ReminderEditor extends AppCompatActivity {
         spPlaces = findViewById(R.id.spPlaces); // existing spinner for places
         spRepeat = findViewById(R.id.spRepeat); // new spinner - ensure layout contains this id
 
-        // Populate repeat spinner: None, Sunday..Saturday, Every day
+        // Populate repeat spinner: Sunday..Saturday (no "Every day")
         String[] repeatOptions = new String[]{
-                "None",
                 "Sunday",
                 "Monday",
                 "Tuesday",
                 "Wednesday",
                 "Thursday",
                 "Friday",
-                "Saturday",
-                "Every day"
+                "Saturday"
         };
-        ArrayAdapter<String> repeatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, repeatOptions);
-        repeatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        if (spRepeat != null) spRepeat.setAdapter(repeatAdapter);
+        if (spRepeat != null) {
+            spRepeat.setItems(repeatOptions);
+        }
 
         // Load and populate places spinner
         placeNames = new ArrayList<>();
@@ -158,18 +156,28 @@ public class ReminderEditor extends AppCompatActivity {
                      Cursor c = read.rawQuery("SELECT repeat_weekday FROM " + DB_OpenHelper.TABLE_REMINDERS + " WHERE id = ?",
                              new String[]{String.valueOf(reminderId)})) {
                     if (c != null && c.moveToFirst()) {
-                        int repeatWeekday = -1;
+                        String repeatWeekdayStr = null;
                         try {
-                            repeatWeekday = c.getInt(0);
+                            repeatWeekdayStr = c.getString(0);
                         } catch (Exception ignored) {
                         }
-                        // map stored value to spinner index:
-                        int selIndex = 0;
-                        if (repeatWeekday == -1) selIndex = 0;
-                        else if (repeatWeekday >= 0 && repeatWeekday <= 6)
-                            selIndex = repeatWeekday + 1;
-                        else if (repeatWeekday == 7) selIndex = 8;
-                        if (spRepeat != null) spRepeat.setSelection(selIndex);
+                        // parse comma-delimited day indices and select them
+                        if (repeatWeekdayStr != null && !repeatWeekdayStr.isEmpty()) {
+                            boolean[] selection = new boolean[7];
+                            String[] indices = repeatWeekdayStr.split(",");
+                            for (String index : indices) {
+                                try {
+                                    int idx = Integer.parseInt(index.trim());
+                                    if (idx >= 0 && idx < 7) {
+                                        selection[idx] = true;
+                                    }
+                                } catch (NumberFormatException ignored) {
+                                }
+                            }
+                            if (spRepeat != null) {
+                                spRepeat.setSelection(selection);
+                            }
+                        }
                     }
                 } catch (Exception ignored) {
                 }
@@ -335,13 +343,18 @@ public class ReminderEditor extends AppCompatActivity {
             placeStr = placeNames.get(selectedPlacePosition);
         }
 
-        // determine repeat_weekday from spinner: -1 none, 0..6 Sun..Sat, 7 every day
-        int repeatWeekday = -1;
+        // determine repeat_weekday from multi-select spinner: comma-delimited indices or empty if none selected
+        String repeatWeekdayStr = "";
         if (spRepeat != null) {
-            int pos = spRepeat.getSelectedItemPosition();
-            if (pos <= 0) repeatWeekday = -1;
-            else if (pos >= 1 && pos <= 7) repeatWeekday = pos - 1;
-            else repeatWeekday = 7;
+            boolean[] checkedItems = spRepeat.getCheckedItemPositions();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < checkedItems.length; i++) {
+                if (checkedItems[i]) {
+                    if (sb.length() > 0) sb.append(",");
+                    sb.append(i);
+                }
+            }
+            repeatWeekdayStr = sb.toString();
         }
 
         try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
@@ -350,7 +363,7 @@ public class ReminderEditor extends AppCompatActivity {
             values.put(DB_OpenHelper.REMINDER_DESCRIPTION, description);
             if (timeMs > 0L) values.put("time", timeMs);
             values.put(DB_OpenHelper.PLACE_ID, placeIdForDb);
-            values.put("repeat_weekday", repeatWeekday);
+            values.put("repeat_weekday", repeatWeekdayStr);
 
             if (reminderId == -1) {
                 try {

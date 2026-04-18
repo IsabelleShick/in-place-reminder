@@ -145,7 +145,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/etTime" />
 
-    <Spinner
+    <com.example.inplacereminder.MultiSelectSpinner
         android:id="@+id/spRepeat"
         android:layout_width="0dp"
         android:layout_height="48dp"
