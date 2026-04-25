@@ -13,6 +13,8 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.Calendar;
+
 public class AlarmScheduler {
     private static final String TAG = "AlarmScheduler";
 
@@ -29,6 +31,13 @@ public class AlarmScheduler {
      * bumped to a short time in the future so AlarmManager will still fire immediately.
      */
     public static void scheduleReminder(Context context, long reminderId, long timeMs, String title, String desc, String place, long placeId) {
+        String repeatDays = getRepeatDaysForReminder(context, reminderId);
+
+        // If repeat days are set, calculate next occurrence; otherwise use provided timeMs
+        if (repeatDays != null && !repeatDays.isEmpty()) {
+            timeMs = getNextOccurrenceForRepeat(repeatDays, timeMs);
+        }
+        
         long now = System.currentTimeMillis();
         // If requested time is in the past or exactly now, bump to now + 1s so AM will fire immediately
         if (timeMs <= now) {
@@ -59,6 +68,7 @@ public class AlarmScheduler {
         intent.putExtra("time", timeMs);
         if (place != null) intent.putExtra("place", place);
         intent.putExtra("place_id", placeId); // NEW
+        intent.putExtra("repeat_days", repeatDays); // NEW: pass repeat days for rescheduling
 
         int requestCode = (int) reminderId;
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
@@ -86,6 +96,97 @@ public class AlarmScheduler {
         } catch (Exception e) {
             Log.w(TAG, "Exception scheduling alarm id=" + reminderId, e);
         }
+    }
+
+    /**
+     * Get the repeat days string for a reminder from the database
+     */
+    private static String getRepeatDaysForReminder(Context context, long reminderId) {
+        DB_OpenHelper dbHelper = new DB_OpenHelper(context);
+        try (SQLiteDatabase db = dbHelper.getReadableDatabase();
+             Cursor c = db.query(
+                     DB_OpenHelper.TABLE_REMINDERS,
+                     new String[]{"repeat_weekday"},
+                     "id = ?",
+                     new String[]{String.valueOf(reminderId)},
+                     null, null, null
+             )) {
+            if (c != null && c.moveToFirst()) {
+                try {
+                    return c.getString(0);
+                } catch (Exception ignored) {
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching repeat days for reminder " + reminderId, e);
+        } finally {
+            dbHelper.close();
+        }
+        return null;
+    }
+
+    /**
+     * Calculate the next occurrence time for a repeating reminder
+     *
+     * @param repeatDays   Comma-delimited string of day indices (0=Sunday, 6=Saturday)
+     * @param originalTime The original reminder time (used to extract time of day)
+     * @return The timestamp of the next occurrence
+     */
+    private static long getNextOccurrenceForRepeat(String repeatDays, long originalTime) {
+        if (repeatDays == null || repeatDays.isEmpty()) {
+            return originalTime;
+        }
+
+        // Parse selected day indices
+        int[] selectedDays = new int[7];
+        for (int i = 0; i < 7; i++) {
+            selectedDays[i] = 0;
+        }
+
+        String[] indices = repeatDays.split(",");
+        for (String index : indices) {
+            try {
+                int dayIdx = Integer.parseInt(index.trim());
+                if (dayIdx >= 0 && dayIdx <= 6) {
+                    selectedDays[dayIdx] = 1;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        // Extract time of day from original time
+        Calendar originalCal = Calendar.getInstance();
+        originalCal.setTimeInMillis(originalTime);
+        int hourOfDay = originalCal.get(Calendar.HOUR_OF_DAY);
+        int minute = originalCal.get(Calendar.MINUTE);
+        int second = originalCal.get(Calendar.SECOND);
+
+        // Find next occurrence
+        Calendar nextOccurrence = Calendar.getInstance();
+        nextOccurrence.setTimeInMillis(System.currentTimeMillis());
+        nextOccurrence.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        nextOccurrence.set(Calendar.MINUTE, minute);
+        nextOccurrence.set(Calendar.SECOND, second);
+        nextOccurrence.set(Calendar.MILLISECOND, 0);
+
+        // If we've already passed this time today, start checking from tomorrow
+        if (nextOccurrence.getTimeInMillis() <= System.currentTimeMillis()) {
+            nextOccurrence.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        // Find the next day that matches one of the selected days
+        int daysChecked = 0;
+        while (daysChecked < 7) {
+            int dayOfWeek = nextOccurrence.get(Calendar.DAY_OF_WEEK) - 1; // Convert to 0=Sunday, 6=Saturday
+            if (selectedDays[dayOfWeek] == 1) {
+                return nextOccurrence.getTimeInMillis();
+            }
+            nextOccurrence.add(Calendar.DAY_OF_MONTH, 1);
+            daysChecked++;
+        }
+
+        // Fallback: if no days selected, return original time
+        return originalTime;
     }
 
     public static void cancelReminder(Context context, long reminderId) {

@@ -202,27 +202,34 @@ public class RemindersManager extends AppCompatActivity {
                     } catch (Exception ignored) {
                     }
 
-                    int repeat = -1;
+                    String repeatStr = "";
                     int repeatIdx = cur.getColumnIndex("repeat_weekday");
                     if (repeatIdx != -1) {
                         try {
-                            repeat = cur.getInt(repeatIdx);
+                            repeatStr = cur.getString(repeatIdx);
                         } catch (Exception ignored) {
                         }
                     }
 
                     TextView tv = (TextView) view;
-                    if (repeat != -1) {
-                        // repeat set: show weekday or "Every day", append time if available
+                    if (repeatStr != null && !repeatStr.isEmpty()) {
+                        // repeat set: show all selected days, append time if available
                         String text;
-                        if (repeat == 7) {
-                            text = "Every day";
-                        } else if (repeat >= 0 && repeat <= 6) {
-                            String dayName = WEEKDAY_NAMES[Math.max(0, Math.min(6, repeat))];
-                            text = dayName;
-                        } else {
-                            text = "";
+
+                        // Parse comma-delimited day indices and build day names
+                        String[] indices = repeatStr.split(",");
+                        StringBuilder daysText = new StringBuilder();
+                        for (String index : indices) {
+                            try {
+                                int dayIdx = Integer.parseInt(index.trim());
+                                if (dayIdx >= 0 && dayIdx <= 6) {
+                                    if (daysText.length() > 0) daysText.append(", ");
+                                    daysText.append(WEEKDAY_NAMES[dayIdx].substring(0, 3)); // Show abbreviated names: Sun, Mon, etc.
+                                }
+                            } catch (NumberFormatException ignored) {
+                            }
                         }
+                        text = daysText.toString();
 
                         if (millis > 0L) {
                             try {
