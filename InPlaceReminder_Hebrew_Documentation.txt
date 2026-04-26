@@ -1,0 +1,808 @@
+תיעוד פרויקט InPlaceReminder - משתנים ופונקציות בעברית
+===========================================================
+
+1. מחלקה DB_OpenHelper - מנהל בסיס הנתונים
+============================================
+
+תיאור כללי:
+מחלקה זו אחראית על כל פעולות בסיס הנתונים SQLite - יצירה, שדרוג, וניהול הנתונים.
+
+משתנים (Constants):
+- DATABASE_NAME: String = "in_place_reminder.db"
+  תיאור: שם קובץ בסיס הנתונים שבו נשמרים כל הנתונים
+
+- DATABASE_VERSION: int = 5
+  תיאור: גרסה בסיס הנתונים הנוכחית (שדורגה 5 פעמים)
+
+- TABLE_REMINDERS: String = "reminders"
+  תיאור: שם טבלת התזכורות
+
+- REMINDER_TITLE: String = "title"
+  תיאור: שם עמודת הכותרת בטבלת התזכורות
+
+- REMINDER_DESCRIPTION: String = "message"
+  תיאור: שם עמודת התיאור בטבלת התזכורות
+
+- PLACE_ID: String = "place_id"
+  תיאור: שדה מפתח זר המתייחס למיקומים
+
+פונקציות:
+
+1. DB_OpenHelper(Context context)
+   פרמטרים: context - הקשר של האפליקציה
+   תיאור: בנאי המחלקה - יוצר או פותח חיבור לבסיס הנתונים
+
+2. onCreate(SQLiteDatabase db): void
+   פרמטרים: db - בסיס הנתונים
+   תיאור: יוצרת את כל הטבלאות בבסיס הנתונים בפעם הראשונה
+           - טבלת places (מיקומים)
+           - טבלת reminders (תזכורות)
+           - טבלת users (משתמשים)
+           מכניסה משתמש ברירת מחדל "Admin" עם סיסמה
+
+3. onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion): void
+   פרמטרים:
+     - db - בסיס הנתונים
+     - oldVersion - גרסה ישנה של בסיס הנתונים
+     - newVersion - גרסה חדשה של בסיס הנתונים
+   תיאור: מטפלת בשדרוג גרסאות בסיס הנתונים
+           שומרת על תאימות לאחור עם נתונים קדומים
+
+4. insertUser(String name, String passwordHash, byte[] picture): long
+   פרמטרים:
+     - name - שם המשתמש החדש
+     - passwordHash - הסיסמה המוצפנת
+     - picture - תמונת הפרופיל בבתים
+   מחזירה: ID של המשתמש החדש או -1 אם הכניסה נכשלה
+   תיאור: מכניסה משתמש חדש לטבלת המשתמשים
+
+5. updateUserPicture(String name, byte[] picture): int
+   פרמטרים:
+     - name - שם המשתמש
+     - picture - תמונה בבתים
+   מחזירה: מספר השורות שהשתנו
+   תיאור: מעדכנת את תמונת הפרופיל של משתמש לפי שם
+
+6. updateUserPicture(long userId, byte[] picture): int
+   פרמטרים:
+     - userId - ID של המשתמש
+     - picture - תמונה בבתים
+   מחזירה: מספר השורות שהשתנו
+   תיאור: מעדכנת את תמונת הפרופיל של משתמש לפי ID
+
+7. userExists(String name): boolean
+   פרמטרים: name - שם המשתמש לבדיקה
+   מחזירה: true אם המשתמש קיים, false אם לא
+   תיאור: בודקת האם שם משתמש כבר קיים בבסיס הנתונים
+
+8. getUserPicture(Long id): byte[]
+   פרמטרים: id - ID של המשתמש
+   מחזירה: בתים של תמונת הפרופיל או null אם אין תמונה
+   תיאור: מחזירה את תמונת הפרופיל של משתמש מסוים
+
+9. getPrimaryUserName(): String (Nullable)
+   מחזירה: שם המשתמש הראשון בבסיס או null
+   תיאור: מחזירה את שם המשתמש הראשון בטבלה
+           שימושית לאפליקציות שעובדות עם משתמש יחיד
+
+10. verifyUserCredentials(String name, String candidatePassword): boolean
+    פרמטרים:
+      - name - שם המשתמש
+      - candidatePassword - הסיסמה לבדיקה
+    מחזירה: true אם הסיסמה נכונה, false אחרת
+    תיאור: אומתת אם שם משתמש וסיסמה תואמים לנתונים בבסיס
+
+11. getUserCursorByName(String name): Cursor (Nullable)
+    פרמטרים: name - שם המשתמש
+    מחזירה: Cursor עם נתוני המשתמש או null
+    תיאור: מחזירה Cursor עם שורת משתמש (id, name, password_hash, picture)
+            הקורא חייב לסגור את ה-Cursor כשסיים
+
+12. getCircularBitmap(Bitmap src): Bitmap
+    פרמטרים: src - התמונה המקורית
+    מחזירה: התמונה שעובדה לעיגול
+    תיאור: ממירה תמונה מלבנית לעיגול לתצוגת פרופיל מסודרת
+
+---
+
+2. מחלקה MainActivity - מסך הכניסה
+===================================
+
+תיאור כללי:
+מחלקה זו מטפלת בעמוד הכניסה של האפליקציה.
+המשתמש יכול להזין שם וסיסמה ולהתחבר או ללכת להרשמה.
+
+משתנים (Fields):
+- etName: EditText
+  תיאור: שדה קלט לשם המשתמש בדף הכניסה
+
+- etPassword: EditText
+  תיאור: שדה קלט לסיסמה בדף הכניסה
+
+- btnLogin: Button
+  תיאור: כפתור הכניסה - מטפל בהתחברות
+
+- btnNewAccount: Button
+  תיאור: כפתור "אין לי חשבון" - מנווט להרשמה
+
+- btnAbout: Button
+  תיאור: כפתור "אודות" - מנווט לעמוד המידע
+
+- prefs: SharedPreferences
+  תיאור: אחסון העדפות משתמש מקומי (משתנים קבועים)
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState - מצב משמור מסיבוב מסך קודם
+   תיאור: אתחול עמוד הכניסה
+           - חיברור רכיבי UI (כפתורים, שדות טקסט)
+           - הגדרת מאזינים לכפתורים
+
+2. onClick(View view): void
+   פרמטרים: view - הרכיב שלחץ עליו המשתמש
+   תיאור: מטפלת בלחיצות על כפתורים
+           - בדיקת שם וסיסמה
+           - ניווט להרשמה או אודות
+
+---
+
+3. מחלקה NewUser - מסך הרשמה
+==============================
+
+תיאור כללי:
+מחלקה זו מטפלת בהרשמה של משתמש חדש.
+קיימות בדיקות תקינות שם וסיסמה.
+
+משתנים (Fields):
+- etName2: EditText
+  תיאור: שדה קלט לשם המשתמש בהרשמה
+
+- etPassword2: EditText
+  תיאור: שדה קלט לסיסמה בהרשמה
+
+- btnRegister: Button
+  תיאור: כפתור הרשמה - מוסיף משתמש חדש
+
+- ib_back: ImageButton
+  תיאור: כפתור חזרה לעמוד הכניסה
+
+- helper: DB_OpenHelper
+  תיאור: עזר בסיס הנתונים לשמירת נתוני משתמש
+
+- currentUserId: long
+  תיאור: ID של המשתמש הנוכחי (משתנה בעתיד)
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState - מצב משמור
+   תיאור: אתחול עמוד ההרשמה וחיברור רכיבי UI
+
+2. onClick(View view): void
+   פרמטרים: view - הרכיב שלחץ עליו
+   תיאור: ביצוע הרשמה עם אימות קלטים
+           - בדיקת תקינות שם וסיסמה
+           - בדיקה אם שם כבר קיים
+
+3. isPasswordStrong(String pwd): boolean
+   פרמטרים: pwd - הסיסמה לבדיקה
+   מחזירה: true אם סיסמה חזקה, false אחרת
+   תיאור: בודקת חוזק סיסמה
+           - אורך 8-20 תווים
+           - יש אותיות קטנות וגדולות
+           - יש ספרה
+           - יש תו מיוחד
+
+4. isNameValid(String name): boolean
+   פרמטרים: name - שם המשתמש לבדיקה
+   מחזירה: true אם שם תקין, false אחרת
+   תיאור: בודקת תקינות שם משתמש
+           - אורך 2-15 תווים
+
+5. getCurrentUserId(): long
+   מחזירה: ID המשתמש הנוכחי
+   תיאור: מחזירה את ID המשתמש הנוכחי
+
+---
+
+4. מחלקה WelcomePage - עמוד הברכה
+===================================
+
+תיאור כללי:
+עמוד זה מופיע לאחר כניסה או הרשמה.
+זה התפריט הראשי של האפליקציה.
+
+משתנים (Fields):
+- helper: DB_OpenHelper
+  תיאור: עזר בסיס הנתונים
+
+- db: SQLiteDatabase
+  תיאור: חיבור בסיס הנתונים לקריאה
+
+- btnMyReminders: Button
+  תיאור: כפתור לעמוד התזכורות שלי
+
+- btnMyPlaces: Button
+  תיאור: כפתור לעמוד המיקומים שלי
+
+- btnSettings: Button
+  תיאור: כפתור להגדרות
+
+- btnAbout: Button
+  תיאור: כפתור לעמוד אודות
+
+- ibProfile: ImageButton
+  תיאור: תמונת פרופיל משתמש
+
+- ib_back: ImageButton
+  תיאור: כפתור חזרה
+
+- currentUserId: long
+  תיאור: ID המשתמש המחובר כעת
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState - מצב משמור
+   תיאור: אתחול עמוד הברכה
+           - חיברור רכיבי UI
+           - טעינת תמונת פרופיל משתמש מבסיס הנתונים
+
+2. onResume(): void
+   תיאור: רענון חיבור בסיס הנתונים בחזרה לעמוד
+
+3. getCurrentUserId(): long
+   מחזירה: ID המשתמש הנוכחי
+   תיאור: מחזירה את ID המשתמש המחובר
+
+---
+
+5. מחלקה ReminderEditor - עריכת תזכורות
+========================================
+
+תיאור כללי:
+עמוד זה מטפל ביצירה ועריכה של תזכורות.
+כוללים בחירת תאריך, שעה, מיקום וימי חזרה.
+
+משתנים (Fields):
+- reminderId: long
+  תיאור: ID התזכורת שמעורכת (-1 אם זו תזכורת חדשה)
+
+- btnSave: Button
+  תיאור: כפתור שמור תזכורת
+
+- btnDelete: Button
+  תיאור: כפתור מחק תזכורת
+
+- etTitle: EditText
+  תיאור: שדה קלט לכותרת התזכורת
+
+- etDescription: EditText
+  תיאור: שדה קלט לתיאור התזכורת
+
+- etDate: EditText
+  תיאור: שדה בחירת תאריך
+
+- etTime: EditText
+  תיאור: שדה בחירת שעה
+
+- spPlaces: Spinner
+  תיאור: תפריט נפתח לבחירת מיקום
+
+- spRepeat: MultiSelectSpinner
+  תיאור: בחירה מרובה של ימים לחזרה
+
+- tvDateView: TextView
+  תיאור: הצגת התאריך הנבחר
+
+- tvTimeView: TextView
+  תיאור: הצגת השעה הנבחרת
+
+- ib_back: ImageButton
+  תיאור: כפתור חזרה
+
+- dbHelper: DB_OpenHelper
+  תיאור: עזר בסיס הנתונים
+
+- placeNames: List<String>
+  תיאור: רשימת שמות מיקומים
+
+- placeIds: List<Long>
+  תיאור: רשימת IDs מיקומים
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState - מצב משמור
+   תיאור: אתחול עמוד העריכה
+           - אם זו עריכה - טעינת נתוני התזכורת הקיימת
+           - אם זו חדשה - טעינת רשימת המיקומים
+
+2. showTimePicker(): void
+   תיאור: הצגת דיאלוג בחירת שעה
+
+3. isDateToday(): boolean
+   מחזירה: true אם התאריך הנבחר הוא היום
+   תיאור: בדיקה האם התאריך הנבחר הוא היום
+
+4. isSelectedDateTimeInPast(): boolean
+   מחזירה: true אם התאריך/שעה בעבר
+   תיאור: בדיקה שהתאריך/שעה לא בעבר
+
+5. loadPlaces(): void
+   תיאור: טעינת כל המיקומים מבסיס הנתונים לתפריט הנפתח
+
+6. saveReminderToDatabase(): void
+   תיאור: שמירה או עדכון תזכורת בבסיס הנתונים
+           ותזמון התראה דרך AlarmScheduler
+
+---
+
+6. מחלקה RemindersManager - ניהול התזכורות
+===========================================
+
+תיאור כללי:
+עמוד זה מציג רשימה של כל התזכורות.
+אפשר לערוך, למחוק או להוסיף תזכורות.
+
+משתנים (Fields):
+- dbHelper: DB_OpenHelper
+  תיאור: עזר בסיס הנתונים
+
+- db: SQLiteDatabase
+  תיאור: חיבור בסיס הנתונים
+
+- cursor: Cursor
+  תיאור: תוצאות השאילתה מבסיס הנתונים
+
+- adapter: SimpleCursorAdapter
+  תיאור: מתאם להצגת הנתונים ברשימה
+
+- lvReminders: ListView
+  תיאור: רשימת התזכורות
+
+- btnDelete: Button
+  תיאור: כפתור מחק תזכורת שנבחרה
+
+- btnEdit: Button
+  תיאור: כפתור עריכה תזכורת שנבחרה
+
+- btnAddReminder: Button
+  תיאור: כפתור הוסף תזכורת חדשה
+
+- selectedReminderId: long
+  תיאור: ID התזכורת שנבחרה כעת
+
+- selectedPosition: int
+  תיאור: מיקום ברשימה של התזכורת שנבחרה
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState - מצב משמור
+   תיאור: אתחול רשימת התזכורות
+           - חיברור רכיבי UI
+           - הגדרת מאזינים
+
+2. onResume(): void
+   תיאור: רענון רשימת התזכורות בחזרה לעמוד
+
+3. loadRemindersIntoList(): void
+   תיאור: שאילתה בבסיס הנתונים
+           והצגת התזכורות ברשימה
+
+4. onSaveInstanceState(Bundle outState): void
+   פרמטרים: outState - מצב לשמירה
+   תיאור: שמירת מצב התזכורת שנבחרה בעת סיבוב מסך
+
+5. onDestroy(): void
+   תיאור: סגירת חיבורי בסיס הנתונים בעת סגירת הפעילות
+
+---
+
+7. מחלקה PlaceEditor - עריכת מיקומים
+====================================
+
+תיאור כללי:
+עמוד זה מטפל ביצירה ועריכה של מיקומים.
+אפשר להזין קואורדינטות ידנית או לקבל מיקום GPS.
+
+משתנים (Fields):
+- placeId: long
+  תיאור: ID המיקום שמעורך (-1 אם זה חדש)
+
+- etPlaceName: EditText
+  תיאור: שדה קלט לשם המיקום
+
+- etLatitude: EditText
+  תיאור: שדה קלט לרוחב גיאוגרפי
+
+- etLongitude: EditText
+  תיאור: שדה קלט לאורך גיאוגרפי
+
+- btnSave: Button
+  תיאור: כפתור שמור מיקום
+
+- btnDelete: Button
+  תיאור: כפתור מחק מיקום
+
+- btnThisPlace: Button
+  תיאור: כפתור לשימוש במיקום GPS נוכחי
+
+- ib_back: ImageButton
+  תיאור: כפתור חזרה
+
+- dbHelper: DB_OpenHelper
+  תיאור: עזר בסיס הנתונים
+
+- locationManager: LocationManager
+  תיאור: שירות GPS של ההתקן
+
+- locationListener: LocationListener
+  תיאור: מאזין לשינויי מיקום
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState - מצב משמור
+   תיאור: אתחול עמוד העריכה
+           - טעינת מיקום אם עריכה
+
+2. fetchCurrentLocation(): void
+   תיאור: בקשה למיקום GPS נוכחי מהתקן
+
+3. requestLocationUpdates(): void
+   תיאור: ביקוש עדכונים מיקום רציפים עם תוקף זמן
+
+4. stopLocationUpdates(): void
+   תיאור: עצירת הקשבת לעדכונים מיקום
+
+5. showLocationSettingsDialog(): void
+   תיאור: הצגת דיאלוג אם שירותי מיקום מנוטרלים
+
+6. onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults): void
+   פרמטרים: requestCode, permissions, grantResults
+   תיאור: טיפול בתוצאות בקשת הרשאות
+
+7. onDestroy(): void
+   תיאור: עצירת עדכונים מיקום בעת סגירה
+
+8. savePlace(): void
+   תיאור: שמירה או עדכון מיקום בבסיס הנתונים
+
+9. deletePlace(): void
+   תיאור: מחיקת מיקום מבסיס הנתונים
+
+---
+
+8. מחלקה PlaceManager - ניהול המיקומים
+======================================
+
+תיאור כללי:
+עמוד זה מציג רשימה של כל המיקומים.
+אפשר לערוך, למחוק או להוסיף מיקומים.
+
+משתנים (Fields):
+- dbHelper: DB_OpenHelper
+  תיאור: עזר בסיס הנתונים
+
+- btnAddPlace: Button
+  תיאור: כפתור הוסף מיקום חדש
+
+- btnEditPlace: Button
+  תיאור: כפתור עריכה מיקום שנבחר
+
+- btnDelete: Button
+  תיאור: כפתור מחק מיקום שנבחר
+
+- listPlaces: ListView
+  תיאור: רשימת המיקומים
+
+- placeNames: List<String>
+  תיאור: רשימת שמות מיקומים
+
+- placeIds: List<Long>
+  תיאור: רשימת IDs מיקומים
+
+- adapter: ArrayAdapter
+  תיאור: מתאם להצגת הנתונים ברשימה
+
+- selectedPosition: int
+  תיאור: מיקום שנבחר ברשימה
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState - מצב משמור
+   תיאור: אתחול רשימת המיקומים
+
+2. onResume(): void
+   תיאור: רענון רשימת המיקומים בחזרה
+
+3. loadPlaces(): void
+   תיאור: שאילתה בבסיס הנתונים והצגה
+
+4. editSelectedPlace(): void
+   תיאור: פתיחת PlaceEditor למיקום שנבחר
+
+5. deleteSelectedPlace(): void
+   תיאור: מחיקת המיקום שנבחר
+
+---
+
+9. מחלקה Settings - הגדרות
+==========================
+
+תיאור כללי:
+עמוד זה מטפל בהגדרות משתמש וניהול פרופיל.
+
+משתנים (Fields):
+- ibProfile: ImageButton
+  תיאור: תמונת הפרופיל והעורך שלה
+
+- ib_back: ImageButton
+  תיאור: כפתור חזרה
+
+- listActions: ListView
+  תיאור: רשימת פעולות הגדרות
+
+- helper: DB_OpenHelper
+  תיאור: עזר בסיס הנתונים
+
+- currentUserId: long
+  תיאור: ID המשתמש הנוכחי
+
+- prefs: SharedPreferences
+  תיאור: אחסון העדפות משתמש
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState - מצב משמור
+   תיאור: אתחול עמוד ההגדרות
+           - טעינת תמונת פרופיל
+
+2. performLogout(): void
+   תיאור: ניקוי נתוני משתמש וחזרה לדף הכניסה
+
+3. showImagePickerDialog(): void
+   תיאור: הצגת דיאלוג לבחירת גלריה או מצלמה
+
+4. onActivityResult(int requestCode, int resultCode, Intent data): void
+   פרמטרים: requestCode, resultCode, data
+   תיאור: טיפול בבחירת תמונה מגלריה או מצלמה
+
+5. getCircularBitmap(Bitmap src): Bitmap
+   פרמטרים: src - תמונה מקורית
+   מחזירה: תמונה עגולה
+   תיאור: המרת תמונה לעגולה לתצוגת פרופיל
+
+6. bitmapToBytes(Bitmap bitmap): byte[]
+   פרמטרים: bitmap - התמונה להמרה
+   מחזירה: בתים של התמונה
+   תיאור: המרת תמונה לבתים JPEG לאחסון בבסיס
+
+---
+
+10. מחלקה AlarmScheduler - תזמון התראות
+========================================
+
+תיאור כללי:
+מחלקה סטטית המטפלת בתזמון וביטול התראות.
+
+פונקציות סטטיות:
+
+1. scheduleReminder(Context context, long reminderId, long timeMs, String title, String desc, String place, long placeId): void
+   פרמטרים: context, reminderId, timeMs, title, desc, place, placeId
+   תיאור: תזמון התראה לתזכורת בזמן מסוים
+           עם טיפול בתזכורות חוזרות
+
+2. cancelReminder(Context context, long reminderId): void
+   פרמטרים: context, reminderId
+   תיאור: ביטול התראה שנתזמנה
+
+3. getNextOccurrenceForRepeat(String repeatDays, long timeMs): long
+   פרמטרים: repeatDays, timeMs
+   מחזירה: הזמן של ההופעה הבאה
+   תיאור: חישוב זמן ההופעה הבא לתזכורת חוזרת
+
+4. getRepeatDaysForReminder(Context context, long reminderId): String
+   פרמטרים: context, reminderId
+   מחזירה: רשימת הימים לחזרה
+   תיאור: קבלת הגדרת repeat_weekday מבסיס הנתונים
+
+---
+
+11. מחלקה AlarmReceiver - מקלט התראות
+=====================================
+
+תיאור כללי:
+מקבלת והמנהלת אירוע של התראה.
+
+פונקציות:
+
+1. onReceive(Context context, Intent intent): void
+   פרמטרים: context, intent
+   תיאור: קבלת שידור התראה מ-AlarmManager
+           בדיקת מיקום והצגת הודעה
+
+---
+
+12. מחלקה BootReceiver - מקלט הפעלת מכשיר
+==========================================
+
+תיאור כללי:
+מטפלת בהתחלת המכשיר מחדש.
+
+פונקציות:
+
+1. onReceive(Context context, Intent intent): void
+   פרמטרים: context, intent
+   תיאור: קבלת שידור הפעלה
+           רענון כל התזכורות מבסיס הנתונים
+
+---
+
+13. מחלקה MultiSelectSpinner - בחירה מרובה
+=============================================
+
+תיאור כללי:
+רכיב ממשק משתמש מותאם לבחירת מספר פריטים.
+
+משתנים (Fields):
+- items: String[]
+  תיאור: פריטים בתפריט (שמות ימים)
+
+- checkedItems: boolean[]
+  תיאור: מצב בחירה לכל פריט
+
+פונקציות:
+
+1. performClick(): boolean
+   מחזירה: true
+   תיאור: הצגת דיאלוג בחירה מרובה
+
+2. setItems(String[] items): void
+   פרמטרים: items
+   תיאור: הגדרת פריטי התפריט
+
+3. setSelection(boolean[] selection): void
+   פרמטרים: selection
+   תיאור: הגדרת פריטים שנבחרים
+
+4. getCheckedItemPositions(): boolean[]
+   מחזירה: מערך של בחירות
+   תיאור: קבלת קצב אינדקסים של פריטים שנבחרים
+
+5. onClick(DialogInterface dialog, int which, boolean isChecked): void
+   פרמטרים: dialog, which, isChecked
+   תיאור: טיפול בבחירת פריט בדיאלוג
+
+---
+
+14. מחלקה Reminder - דגם נתונים
+==============================
+
+תיאור כללי:
+מחלקה המייצגת נתוני תזכורת אחת.
+
+משתנים (Fields):
+- id: long
+  תיאור: ID התזכורת
+
+- title: String
+  תיאור: כותרת התזכורת
+
+- description: String
+  תיאור: תיאור התזכורת
+
+- dateMillis: long
+  תיאור: תאריך/שעה התזכורת במילישניות
+
+פונקציות:
+
+1. Reminder(long id, String title, String description, long dateMillis)
+   פרמטרים: id, title, description, dateMillis
+   תיאור: בנאי לאובייקט תזכורת
+
+2. toString(): String
+   מחזירה: כותרת התזכורת
+   תיאור: מחזירה כותרת התזכורת להצגה
+
+---
+
+15. מחלקה MyApplication - ניהול מצב גלובלי
+==========================================
+
+תיאור כללי:
+מחלקה המנהלת מצב משתמש גלובלי לכל האפליקציה.
+
+משתנים (Fields):
+- currentUserId: long (volatile)
+  תיאור: ID של המשתמש המחובר כעת
+
+- currentUserPicture: byte[] (volatile)
+  תיאור: בתים של תמונת הפרופיל של המשתמש
+
+פונקציות:
+
+1. setCurrentUserId(long id): void
+   פרמטרים: id
+   תיאור: הגדרת ID משתמש נוכחי (synchronized)
+
+2. getCurrentUserId(): long
+   מחזירה: ID המשתמש הנוכחי
+   תיאור: קבלת ID משתמש נוכחי (synchronized)
+
+3. setCurrentUserPictureBytes(byte[] bytes): void
+   פרמטרים: bytes
+   תיאור: הגדרת תמונת פרופיל (synchronized)
+
+4. getCurrentUserPictureBytes(): byte[]
+   מחזירה: בתים של תמונה
+   תיאור: קבלת תמונת פרופיל (synchronized)
+
+5. getCurrentUserBitmap(): Bitmap
+   מחזירה: תמונה או null
+   תיאור: פענוח בתים לתמונה (null-safe)
+
+6. clearCurrentUser(): void
+   תיאור: ניקוי נתוני משתמש בלוגאוט (synchronized)
+
+---
+
+16. מחלקה FirstActivity - מסך ברוכים הבאים
+============================================
+
+תיאור כללי:
+מסך ברוכים הבאים שמוצג בהפעלת האפליקציה.
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState
+   תיאור: הצגת אנימציית ברוכים הבאים לשך 3 שניות
+           ואז ניווט לדף הכניסה
+
+---
+
+17. מחלקה About - עמוד אודות
+============================
+
+תיאור כללי:
+עמוד מידע ותכונות בעלי אנימציות.
+
+פונקציות:
+
+1. onCreate(Bundle savedInstanceState): void
+   פרמטרים: savedInstanceState
+   תיאור: אתחול עמוד אודות עם אנימציות GIF
+           וכפתור אפקט קונפטי
+
+---
+
+סוף התיעוד
+
+הערות חשובות:
+==============
+
+1. משתנים המסומנים (volatile) - בטוחים לשימוש מעברי-חוט
+2. משתנים המסומנים (synchronized) - מוגנים בפני בו-זמניות
+3. משתנים המסומנים (Nullable) - עשויים להחזיר null
+4. Database Constants - שמות הטבלאות והעמודות הם קבועים בכל היישום
+5. Cursor Objects - יש להקפיד לסגור Cursor לאחר שימוש
+
+מבנה הנתונים:
+==============
+
+טבלה: users
+עמודות: id (PK), name (UNIQUE), password_hash, picture (BLOB)
+
+טבלה: places
+עמודות: id (PK), place_name, lat, lon
+
+טבלה: reminders
+עמודות: id (PK), title, place_id (FK), time, repeat_weekday, description, וכו'
+
+
