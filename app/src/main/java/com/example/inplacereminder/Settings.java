@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,6 +35,9 @@ public class Settings extends AppCompatActivity {
     // optional key that your app might use to store signed-in user id
     private static final String KEY_CURRENT_USER_ID = "current_user_id";
 
+    private long currentUserId = -1;
+    private DB_OpenHelper helper;
+
     private static final int REQ_GALLERY = 1001;
     private static final int REQ_CAMERA = 1002;
 
@@ -45,6 +49,10 @@ public class Settings extends AppCompatActivity {
         ib_back = findViewById(R.id.ib_back4);
         ibProfile = findViewById(R.id.ibProfile);
         listActions = findViewById(R.id.listActions);
+
+        helper = new DB_OpenHelper(this);
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        currentUserId = prefs.getLong(KEY_CURRENT_USER_ID, -1);
 
         ib_back.setOnClickListener(v -> finish());
 
@@ -62,7 +70,7 @@ public class Settings extends AppCompatActivity {
         if (bmp != null) {
             ibProfile.setImageBitmap(getCircularBitmap(bmp));
         } else {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
             String profileUriStr = prefs.getString(KEY_PROFILE_URI, null);
             if (profileUriStr != null && !profileUriStr.isEmpty()) {
                 try {
@@ -159,6 +167,10 @@ public class Settings extends AppCompatActivity {
                     Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedUri);
                     ibProfile.setImageBitmap(getCircularBitmap(bitmap));
                     prefs.edit().putString(KEY_PROFILE_URI, selectedUri.toString()).apply();
+                    // Save to DB
+                    if (currentUserId != -1) {
+                        helper.updateUserPicture(currentUserId, bitmapToBytes(bitmap));
+                    }
                 }
             } else if (requestCode == REQ_CAMERA && data != null) {
                 Object extra = data.getExtras() != null ? data.getExtras().get("data") : null;
@@ -173,6 +185,10 @@ public class Settings extends AppCompatActivity {
                         fos.flush();
                         Uri saved = Uri.fromFile(f);
                         prefs.edit().putString(KEY_PROFILE_URI, saved.toString()).apply();
+                        // Save to DB
+                        if (currentUserId != -1) {
+                            helper.updateUserPicture(currentUserId, bitmapToBytes(thumbnail));
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show();
@@ -209,5 +225,12 @@ public class Settings extends AppCompatActivity {
         float r = size / 2f;
         canvas.drawCircle(r, r, r, paint);
         return output;
+    }
+
+    private byte[] bitmapToBytes(Bitmap bitmap) {
+        if (bitmap == null) return null;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+        return baos.toByteArray();
     }
 }

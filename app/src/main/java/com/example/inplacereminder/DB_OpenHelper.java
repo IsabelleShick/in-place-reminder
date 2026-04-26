@@ -147,6 +147,23 @@ public class DB_OpenHelper extends SQLiteOpenHelper {
     }
 
     /**
+     * Update profile picture for existing user by id
+     *
+     * @return number of rows updated
+     */
+    public int updateUserPicture(long userId, byte[] picture) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues cv = new ContentValues();
+        cv.put("picture", picture);
+
+        int rows = db.update("users", cv, "id = ?", new String[]{String.valueOf(userId)});
+        db.close();
+
+        return rows;
+    }
+
+    /**
      * Check if a username already exists
      */
     public boolean userExists(String name) {

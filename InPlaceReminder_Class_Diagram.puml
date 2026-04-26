@@ -1,0 +1,90 @@
+@startuml InPlaceReminder_Class_Diagram
+skinparam shadowing false
+top to bottom direction
+
+class DB_OpenHelper {
+  - DATABASE_NAME: String
+  - DATABASE_VERSION: int
+  + onCreate(db: SQLiteDatabase)
+  + onUpgrade(db: SQLiteDatabase, oldVersion: int, newVersion: int)
+  + insertUser(name: String, password: String, picture: byte[])
+  + getUserPicture(userId: long): byte[]
+  + getCircularBitmap(bmp: Bitmap): Bitmap
+}
+
+class MainActivity {
+  - etName: EditText
+  - etPassword: EditText
+  - btnLogin: Button
+  + onCreate(savedInstanceState: Bundle)
+  + onClick(view: View)
+}
+
+class AlarmScheduler {
+  + scheduleReminder(context: Context, reminderId: long, timeMs: long, title: String, desc: String, place: String, placeId: long)
+  + cancelReminder(context: Context, reminderId: long)
+  + getNextOccurrenceForRepeat(repeatDays: String, timeMs: long): long
+  + getRepeatDaysForReminder(context: Context, reminderId: long): String
+}
+
+class AlarmReceiver {
+  + onReceive(context: Context, intent: Intent)
+}
+
+class MyApplication {
+  - currentUserId: long
+  - currentUserPicture: byte[]
+  + setCurrentUserId(id: long)
+  + getCurrentUserId(): long
+  + setCurrentUserPictureBytes(bytes: byte[])
+  + getCurrentUserPictureBytes(): byte[]
+  + getCurrentUserBitmap(): Bitmap
+  + clearCurrentUser()
+}
+
+class Reminder {
+  + id: long
+  + title: String
+  + description: String
+  + dateMillis: long
+  + Reminder(id: long, title: String, description: String, dateMillis: long)
+  + toString(): String
+}
+
+class ReminderEditor {
+  - reminderId: long
+  - btnSave: Button
+  - etTitle: EditText
+  + onCreate(savedInstanceState: Bundle)
+  + saveReminderToDatabase()
+}
+
+class RemindersManager {
+  - dbHelper: DB_OpenHelper
+  - lvReminders: ListView
+  + onCreate(savedInstanceState: Bundle)
+  + loadRemindersIntoList()
+}
+
+class PlaceEditor {
+  - placeId: long
+  - etPlaceName: EditText
+  + onCreate(savedInstanceState: Bundle)
+  + savePlace()
+}
+
+class Settings {
+  - ibProfile: ImageButton
+  + onCreate(savedInstanceState: Bundle)
+  + performLogout()
+}
+
+MainActivity --> DB_OpenHelper : uses
+MainActivity --> MyApplication : uses
+AlarmScheduler --> DB_OpenHelper : uses
+ReminderEditor --> DB_OpenHelper : uses
+RemindersManager --> DB_OpenHelper : uses
+PlaceEditor --> DB_OpenHelper : uses
+Settings --> MyApplication : uses
+
+@enduml
