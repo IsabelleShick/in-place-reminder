@@ -14,6 +14,5 @@ public class BootReceiver extends BroadcastReceiver {
             // reschedule all future reminders after reboot or app update
             AlarmScheduler.rescheduleAll(context);
         }
-        // on some OEMs you might want to delay rescheduling slightly (workmanager/job) if needed
     }
 }

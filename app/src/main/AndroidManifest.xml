@@ -35,6 +35,13 @@
         android:theme="@style/Theme.InPlaceReminder"
         tools:targetApi="31">
 
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAKR6a7-rct5GaA1fBdRxN73EDMRDS-470" />
+
         <activity
             android:name=".RemindersManager"
             android:exported="false"></activity>
@@ -49,6 +56,9 @@
             android:exported="false"></activity>
         <activity
             android:name=".PlaceEditor"
+            android:exported="false"></activity>
+        <activity
+            android:name=".MapSelector"
             android:exported="false"></activity>
         <activity
             android:name=".WelcomePage"
@@ -92,4 +102,3 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
 </manifest>
-

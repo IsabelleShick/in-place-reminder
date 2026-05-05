@@ -67,15 +67,17 @@ public class AlarmScheduler {
         if (desc != null) intent.putExtra("description", desc);
         intent.putExtra("time", timeMs);
         if (place != null) intent.putExtra("place", place);
-        intent.putExtra("place_id", placeId); // NEW
-        intent.putExtra("repeat_days", repeatDays); // NEW: pass repeat days for rescheduling
+        intent.putExtra("place_id", placeId);
+        intent.putExtra("repeat_days", repeatDays); // pass repeat days for rescheduling
 
-        int requestCode = (int) reminderId;
+        // Create pending intent
+        int requestCode = (int) reminderId; // use reminderId as request code
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) flags |= PendingIntent.FLAG_IMMUTABLE;
 
         PendingIntent pi = PendingIntent.getBroadcast(context, requestCode, intent, flags);
 
+        // Schedule alarm
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am == null) {
             Log.w(TAG, "AlarmManager is null; cannot schedule (id=" + reminderId + ")");

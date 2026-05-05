@@ -13,6 +13,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    // AIzaSyAKR6a7-rct5GaA1fBdRxN73EDMRDS-470
+
     EditText etName, etPassword;
     Button btnLogin, btnNewAccount, btnAbout;
     SharedPreferences prefs;

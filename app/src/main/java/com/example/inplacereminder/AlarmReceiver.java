@@ -39,10 +39,10 @@ public class AlarmReceiver extends BroadcastReceiver {
         String desc = intent != null ? intent.getStringExtra("desc") : null;
         long time = intent != null ? intent.getLongExtra("time", 0L) : 0L;
         String place = intent != null ? intent.getStringExtra("place") : null; // optional
-        long placeId = intent != null ? intent.getLongExtra("place_id", -1L) : -1L; // NEW
-        String repeatDays = intent != null ? intent.getStringExtra("repeat_days") : null; // NEW
+        long placeId = intent != null ? intent.getLongExtra("place_id", -1L) : -1L;
+        String repeatDays = intent != null ? intent.getStringExtra("repeat_days") : null;
 
-        // NEW: If placeId is not -1, check if current location is within 300 meters of the place
+        // If placeId is not -1, check if current location is within 300 meters of the place
         if (placeId > 0) {
             if (!isUserNearPlace(context, placeId)) {
                 Log.d(TAG, "User is not near the selected place. Skipping notification.");
@@ -131,7 +131,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         } catch (Exception ignored) {
         }
 
-        // NEW: If this reminder has repeat days set, reschedule it for the next occurrence
+        // If this reminder has repeat days set, reschedule it for the next occurrence
         if (repeatDays != null && !repeatDays.isEmpty()) {
             Log.d(TAG, "Rescheduling repeating reminder id=" + reminderId + " for next occurrence");
             AlarmScheduler.scheduleReminder(context, reminderId, time, title, desc, place, placeId);

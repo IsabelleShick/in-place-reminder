@@ -112,7 +112,7 @@ public class DB_OpenHelper extends SQLiteOpenHelper {
      * Insert new user into database.
      * Returns row id or -1 on failure.
      */
-    public long insertUser(String name, String passwordHash, byte[] picture) {
+    public void insertUser(String name, String passwordHash, byte[] picture) {
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues cv = new ContentValues();
@@ -126,7 +126,6 @@ public class DB_OpenHelper extends SQLiteOpenHelper {
         long id = db.insert("users", null, cv);
         db.close();
 
-        return id;
     }
 
     /**
