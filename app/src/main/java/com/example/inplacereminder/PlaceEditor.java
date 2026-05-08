@@ -29,12 +29,14 @@ public class PlaceEditor extends AppCompatActivity {
     private Button btnSave;
     private Button btnDelete;
     private Button btnThisPlace;
+    private Button btnSelectFromMap;
     private ImageButton ib_back;
     private DB_OpenHelper dbHelper;
     private LocationManager locationManager;
     private LocationListener locationListener;
 
     private static final int PERMISSION_REQUEST_CODE = 100;
+    private static final int MAP_SELECTOR_REQUEST_CODE = 101;
     private static final long LOCATION_UPDATE_TIMEOUT = 15000; // 15 seconds
 
     @Override
@@ -51,6 +53,7 @@ public class PlaceEditor extends AppCompatActivity {
         btnSave = findViewById(R.id.btnSave);
         btnDelete = findViewById(R.id.btnDelete);
         btnThisPlace = findViewById(R.id.btnThisPlace);
+        btnSelectFromMap = findViewById(R.id.btnSelectFromMap);
         ib_back = findViewById(R.id.ib_back);
 
         ib_back.setOnClickListener(v -> finish());
@@ -72,6 +75,7 @@ public class PlaceEditor extends AppCompatActivity {
         }
 
         btnThisPlace.setOnClickListener(v -> fetchCurrentLocation());
+        btnSelectFromMap.setOnClickListener(v -> openMapSelector());
         btnSave.setOnClickListener(v -> savePlace());
     }
 
@@ -226,6 +230,43 @@ public class PlaceEditor extends AppCompatActivity {
                 Toast.makeText(this, "Location update timeout. Please try again.", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    private void openMapSelector() {
+        Intent intent = new Intent(this, MapSelector.class);
+
+        // Pass current latitude and longitude if they exist
+        String latStr = etLatitude.getText().toString().trim();
+        String lonStr = etLongitude.getText().toString().trim();
+
+        if (!latStr.isEmpty() && !lonStr.isEmpty()) {
+            try {
+                double latitude = Double.parseDouble(latStr);
+                double longitude = Double.parseDouble(lonStr);
+                intent.putExtra("latitude", latitude);
+                intent.putExtra("longitude", longitude);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
+
+        startActivityForResult(intent, MAP_SELECTOR_REQUEST_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == MAP_SELECTOR_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            double latitude = data.getDoubleExtra("latitude", Double.NaN);
+            double longitude = data.getDoubleExtra("longitude", Double.NaN);
+
+            if (!Double.isNaN(latitude) && !Double.isNaN(longitude)) {
+                etLatitude.setText(String.format("%.6f", latitude));
+                etLongitude.setText(String.format("%.6f", longitude));
+                Toast.makeText(this, "Location selected from map", Toast.LENGTH_SHORT).show();
             }
         }
     }

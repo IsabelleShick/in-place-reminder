@@ -3,14 +3,19 @@ package com.example.inplacereminder;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -28,11 +33,25 @@ public class MapSelector extends AppCompatActivity implements OnMapReadyCallback
     private ImageButton ib_back;
 
     private static final int PERMISSION_REQUEST_CODE = 100;
+    private static final String TAG = "MapSelector";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map_selector);
+
+        // Check Google Play Services availability
+        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = googleApiAvailability.isGooglePlayServicesAvailable(this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (googleApiAvailability.isUserResolvableError(resultCode)) {
+                googleApiAvailability.getErrorDialog(this, resultCode, 2404).show();
+            } else {
+                Toast.makeText(this, "This device is not supported for Google Maps", Toast.LENGTH_LONG).show();
+                finish();
+            }
+            return;
+        }
 
         mapView = findViewById(R.id.mapView);
         btnConfirm = findViewById(R.id.btnConfirm);
@@ -51,30 +70,56 @@ public class MapSelector extends AppCompatActivity implements OnMapReadyCallback
 
         btnConfirm.setOnClickListener(v -> confirmLocation());
 
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(this);
+        // Request location permissions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        PERMISSION_REQUEST_CODE);
+            }
+        }
+
+        if (mapView != null) {
+            mapView.onCreate(savedInstanceState);
+            mapView.getMapAsync(this);
+        } else {
+            Log.e(TAG, "MapView is null - layout might not have mapView element");
+        }
     }
 
     @Override
     public void onMapReady(GoogleMap map) {
-        googleMap = map;
-        googleMap.setOnMapClickListener(this);
+        try {
+            googleMap = map;
+            Log.d(TAG, "Map ready callback received");
 
-        // Enable MyLocation layer if the permission is granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            googleMap.setMyLocationEnabled(true);
-        }
+            googleMap.setOnMapClickListener(this);
 
-        // If a location was passed, show it
-        if (selectedLocation != null) {
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLocation, 15));
-            currentMarker = googleMap.addMarker(new MarkerOptions()
-                    .position(selectedLocation)
-                    .title("Selected Location"));
-        } else {
-            // Default to world view
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(0, 0), 2));
+            // Enable MyLocation layer if the permission is granted
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                googleMap.setMyLocationEnabled(true);
+                Log.d(TAG, "Location enabled on map");
+            } else {
+                Log.d(TAG, "Location permission not granted");
+            }
+
+            // If a location was passed, show it
+            if (selectedLocation != null) {
+                Log.d(TAG, "Moving camera to: " + selectedLocation.latitude + ", " + selectedLocation.longitude);
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLocation, 15));
+                currentMarker = googleMap.addMarker(new MarkerOptions()
+                        .position(selectedLocation)
+                        .title("Selected Location"));
+            } else {
+                // Default to world view
+                Log.d(TAG, "No location provided, showing world view");
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(0, 0), 2));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onMapReady: " + e.getMessage(), e);
+            Toast.makeText(this, "Error loading map: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -133,7 +178,26 @@ public class MapSelector extends AppCompatActivity implements OnMapReadyCallback
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Location permission granted");
+                if (googleMap != null) {
+                    try {
+                        googleMap.setMyLocationEnabled(true);
+                    } catch (SecurityException e) {
+                        Log.e(TAG, "Error enabling location: " + e.getMessage());
+                    }
+                }
+            } else {
+                Log.d(TAG, "Location permission denied");
+            }
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
     }
